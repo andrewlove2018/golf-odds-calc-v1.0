@@ -99,386 +99,42 @@ const weightedAvg = (vals, weights) => {
   return vals.reduce((sum, v, i) => sum + v * weights[i], 0) / total;
 };
 
-// ─── STYLES ──────────────────────────────────────────────────────────────────
-const S = {
-  wrap: {
-    background: "#080c10",
-    minHeight: "100vh",
-    fontFamily: "'DM Mono', 'Courier New', monospace",
-    color: "#e8edf2",
-    padding: 0,
+// ─── THEMES ──────────────────────────────────────────────────────────────────
+const THEMES = {
+  dark: {
+    bgMain: "#080c10",
+    bgCard: "#0d1318",
+    bgHeader: "#0a1018",
+    border: "#1e2d3a",
+    textMain: "#e8edf2",
+    textMuted: "#5a7080",
+    accent: "#c8a84b",
+    green: "#34d37a",
+    red: "#ff6b5b",
+    greenFade: "rgba(42,124,79,0.15)",
+    greenBorder: "rgba(52,211,122,0.3)",
   },
-  header: {
-    background: "#0d1318",
-    borderBottom: "1px solid #1e2d3a",
-    padding: "18px 32px",
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-  },
-  h1: {
-    fontFamily: "Georgia, serif",
-    fontSize: 22,
-    fontWeight: 700,
-    letterSpacing: "0.02em",
-    margin: 0,
-  },
-  sub: {
-    marginLeft: "auto",
-    fontSize: 10,
-    color: "#5a7080",
-    textAlign: "right",
-    lineHeight: 1.6,
-    letterSpacing: "0.1em",
-    textTransform: "uppercase",
-  },
-  main: { maxWidth: 900, margin: "0 auto", padding: "28px 20px" },
-  sectionLabel: {
-    fontSize: 10,
-    letterSpacing: "0.2em",
-    textTransform: "uppercase",
-    color: "#5a7080",
-    marginBottom: 10,
-  },
-  card: {
-    background: "#0d1318",
-    border: "1px solid #1e2d3a",
-    borderRadius: 6,
-    padding: "20px 22px",
-    marginBottom: 18,
-  },
-  cardTitle: {
-    fontFamily: "Georgia, serif",
-    fontSize: 15,
-    fontWeight: 700,
-    marginBottom: 14,
-    color: "#c8a84b",
-  },
-  label: {
-    display: "block",
-    fontSize: 10,
-    letterSpacing: "0.16em",
-    textTransform: "uppercase",
-    color: "#5a7080",
-    marginBottom: 5,
-  },
-  input: {
-    width: "100%",
-    background: "#080c10",
-    border: "1px solid #1e2d3a",
-    borderRadius: 4,
-    color: "#e8edf2",
-    fontFamily: "inherit",
-    fontSize: 14,
-    padding: "9px 11px",
-    outline: "none",
-    boxSizing: "border-box",
-    colorScheme: "dark",
-  },
-  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
-  grid3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 },
-  grid4: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 },
-  fetchBtn: {
-    width: "100%",
-    padding: "10px 0",
-    background: "rgba(42,124,79,0.15)",
-    border: "1px solid rgba(52,211,122,0.3)",
-    borderRadius: 4,
-    color: "#34d37a",
-    fontFamily: "inherit",
-    fontSize: 11,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    cursor: "pointer",
-    marginBottom: 14,
-    transition: "all 0.2s",
-  },
-  calcBtn: {
-    width: "100%",
-    padding: 15,
-    background: "#2a7c4f",
-    border: "none",
-    borderRadius: 6,
-    color: "#fff",
-    fontFamily: "Georgia, serif",
-    fontSize: 17,
-    fontWeight: 700,
-    cursor: "pointer",
-    marginBottom: 28,
-    letterSpacing: "0.03em",
-  },
-  statusBase: {
-    fontSize: 11,
-    textAlign: "center",
-    marginBottom: 8,
-    minHeight: 16,
-    letterSpacing: "0.08em",
-  },
-  liveBox: {
-    background: "#080c10",
-    border: "1px solid #1e2d3a",
-    borderRadius: 4,
-    padding: "10px 14px",
-    fontSize: 11,
-    lineHeight: 1.8,
-    marginBottom: 14,
-    color: "#5a7080",
-  },
-  heroGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr auto 1fr",
-    gap: 16,
-    alignItems: "center",
-    textAlign: "center",
-  },
-  prName: {
-    fontSize: 10,
-    letterSpacing: "0.18em",
-    textTransform: "uppercase",
-    color: "#5a7080",
-    marginBottom: 6,
-  },
-  prProb: { fontSize: 12, color: "#5a7080", marginTop: 4 },
-  vsText: {
-    fontSize: 12,
-    color: "#1e2d3a",
-    fontWeight: 700,
-    letterSpacing: "0.1em",
-  },
-  edgeBar: {
-    height: 4,
-    background: "#1e2d3a",
-    borderRadius: 2,
-    overflow: "hidden",
-    marginTop: 14,
-  },
-  brkRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: "6px 0",
-    borderBottom: "1px solid rgba(30,45,58,0.5)",
-    fontSize: 12,
-  },
-  brkLabel: { color: "#5a7080", fontSize: 11 },
-  brkVal: { fontFamily: "inherit", fontSize: 12 },
-  formula: {
-    background: "#080c10",
-    border: "1px solid #1e2d3a",
-    borderLeft: "3px solid #1a9e6e",
-    padding: "13px 15px",
-    borderRadius: 4,
-    fontSize: 11,
-    lineHeight: 1.9,
-    color: "#5a7080",
-    whiteSpace: "pre-wrap",
-    fontFamily: "inherit",
-  },
-  disclaimer: {
-    fontSize: 11,
-    color: "#5a7080",
-    lineHeight: 1.7,
-    padding: "14px 16px",
-    background: "#0d1318",
-    border: "1px solid #1e2d3a",
-    borderRadius: 6,
-    fontStyle: "italic",
-  },
-  shareRow: { display: "flex", gap: 10, marginBottom: 18 },
-  shareBtn: {
-    padding: "9px 18px",
-    background: "#0d1318",
-    border: "1px solid #1e2d3a",
-    borderRadius: 4,
-    color: "#5a7080",
-    fontFamily: "inherit",
-    fontSize: 11,
-    letterSpacing: "0.1em",
-    textTransform: "uppercase",
-    cursor: "pointer",
-  },
-  hourRow: {
-    display: "grid",
-    gridTemplateColumns: "80px 1fr 1fr 1fr 1fr",
-    gap: 0,
-    fontSize: 10,
-    borderBottom: "1px solid #1e2d3a",
-  },
-  hourCell: { padding: "5px 8px", color: "#5a7080", letterSpacing: "0.06em" },
-  hourCellVal: {
-    padding: "5px 8px",
-    color: "#e8edf2",
-    textAlign: "right",
-    letterSpacing: "0.04em",
+  light: {
+    bgMain: "#f1f5f9",
+    bgCard: "#ffffff",
+    bgHeader: "#f8fafc",
+    border: "#cbd5e1",
+    textMain: "#0f172a",
+    textMuted: "#64748b",
+    accent: "#b45309",
+    green: "#16a34a",
+    red: "#dc2626",
+    greenFade: "rgba(22,163,74,0.1)",
+    greenBorder: "rgba(22,163,74,0.3)",
   },
 };
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = "number",
-  placeholder,
-  min,
-  max,
-  step = "any",
-}) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={S.label}>{label}</label>
-      <input
-        style={S.input}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        min={min}
-        max={max}
-        step={step}
-      />
-    </div>
-  );
-}
-
-// ─── HOURLY FORECAST TABLE display ───────────────────────────────────────────
-function HourlyTable({ hours, teeTime }) {
-  if (!hours || !hours.length) return null;
-
-  // Format military time to AM/PM for display
-  const formatTime = (timeStr) => {
-    let [h, m] = timeStr.split(":");
-    let hour = parseInt(h);
-    let ampm = hour >= 12 ? "PM" : "AM";
-    hour = hour % 12 || 12;
-    return `${hour}:${m} ${ampm}`;
-  };
-
-  const weights = hours.map((h) => h.weight);
-
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div
-        style={{
-          fontSize: 10,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: "#5a7080",
-          marginBottom: 6,
-        }}
-      >
-        4-Hour Round Forecast · Tee {formatTime(teeTime)}
-      </div>
-      <div
-        style={{
-          background: "#080c10",
-          border: "1px solid #1e2d3a",
-          borderRadius: 4,
-          overflow: "hidden",
-        }}
-      >
-        {/* header */}
-        <div style={{ ...S.hourRow, background: "#0a1018" }}>
-          <div style={{ ...S.hourCell, color: "#3a5060" }}>Hour</div>
-          <div style={{ ...S.hourCell, textAlign: "right", color: "#3a5060" }}>
-            Wind mph
-          </div>
-          <div style={{ ...S.hourCell, textAlign: "right", color: "#3a5060" }}>
-            Gusts mph
-          </div>
-          <div style={{ ...S.hourCell, textAlign: "right", color: "#3a5060" }}>
-            Precip mm
-          </div>
-          <div style={{ ...S.hourCell, textAlign: "right", color: "#3a5060" }}>
-            Temp °F
-          </div>
-        </div>
-        {hours.map((h, i) => (
-          <div
-            key={i}
-            style={{
-              ...S.hourRow,
-              background:
-                i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
-            }}
-          >
-            <div style={S.hourCell}>
-              {h.label}
-              <span
-                style={{ color: "#3a5060", marginLeft: 4 }}
-              >{`(${h.weight.toFixed(1)}×)`}</span>
-            </div>
-            <div
-              style={{
-                ...S.hourCellVal,
-                color:
-                  h.wind > 15 ? "#ff6b5b" : h.wind > 8 ? "#c8a84b" : "#34d37a",
-              }}
-            >
-              {h.wind}
-            </div>
-            <div
-              style={{
-                ...S.hourCellVal,
-                color: h.gusts > 20 ? "#ff6b5b" : "#e8edf2",
-              }}
-            >
-              {h.gusts}
-            </div>
-            <div
-              style={{
-                ...S.hourCellVal,
-                color: h.precip > 0 ? "#c8a84b" : "#5a7080",
-              }}
-            >
-              {h.precip.toFixed(1)}
-            </div>
-            <div style={S.hourCellVal}>{h.temp}°</div>
-          </div>
-        ))}
-        {/* weighted avg row */}
-        <div
-          style={{
-            ...S.hourRow,
-            background: "rgba(26,158,110,0.08)",
-            borderTop: "1px solid #1e2d3a",
-          }}
-        >
-          <div style={{ ...S.hourCell, color: "#1a9e6e" }}>Dyn Avg</div>
-          <div style={{ ...S.hourCellVal, color: "#1a9e6e" }}>
-            {weightedAvg(
-              hours.map((h) => h.wind),
-              weights
-            ).toFixed(1)}
-          </div>
-          <div style={{ ...S.hourCellVal, color: "#1a9e6e" }}>
-            {weightedAvg(
-              hours.map((h) => h.gusts),
-              weights
-            ).toFixed(1)}
-          </div>
-          <div style={{ ...S.hourCellVal, color: "#1a9e6e" }}>
-            {weightedAvg(
-              hours.map((h) => h.precip),
-              weights
-            ).toFixed(2)}
-          </div>
-          <div style={{ ...S.hourCellVal, color: "#1a9e6e" }}>
-            {Math.round(
-              weightedAvg(
-                hours.map((h) => h.temp),
-                weights
-              )
-            )}
-            °
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const today = new Date().toISOString().split("T")[0];
+
+  const [isLightMode, setIsLightMode] = useState(false);
+  const t = isLightMode ? THEMES.light : THEMES.dark;
 
   const [p1name, setP1name] = useState("");
   const [p2name, setP2name] = useState("");
@@ -491,6 +147,7 @@ export default function App() {
 
   const [roundDate, setRoundDate] = useState(today);
   const [teeTime, setTeeTime] = useState("08:00");
+  const [roundHours, setRoundHours] = useState(4); // Dynamic length
 
   const [wind, setWind] = useState("");
   const [gusts, setGusts] = useState("");
@@ -540,7 +197,6 @@ export default function App() {
 
       if (parts.length > 1) {
         const searchRegion = parts[1].trim().toLowerCase();
-
         const states = {
           al: "alabama",
           ak: "alaska",
@@ -620,7 +276,7 @@ export default function App() {
       const startHour = parseInt(teeTime.split(":")[0], 10);
       const hoursArray = [];
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < roundHours; i++) {
         const hourIdx = startHour + i;
         if (hourIdx < 24) {
           const w = Math.round(weatherData.hourly.wind_speed_10m[hourIdx]);
@@ -684,14 +340,14 @@ export default function App() {
         .join(", ");
       setLiveWeather({ location_found: locDisplay, source: "Open-Meteo API" });
       setWeatherStatus({
-        msg: "✓ 4-hour forecast loaded successfully",
+        msg: `✓ ${roundHours}-hour forecast loaded successfully`,
         cls: "ok",
       });
     } catch (e) {
       setWeatherStatus({ msg: `⚠ ${e.message}`, cls: "err" });
     }
     setFetching(false);
-  }, [loc, teeTime, roundDate]);
+  }, [loc, teeTime, roundDate, roundHours]);
 
   // ── Calculate ─────────────────────────────────────────────────────────────
   const calculate = useCallback(() => {
@@ -760,6 +416,7 @@ export default function App() {
       prc,
       tmp,
       usedHourly: !!hourlyData,
+      roundHours,
     });
   }, [
     p1hcp,
@@ -774,9 +431,184 @@ export default function App() {
     p1name,
     p2name,
     hourlyData,
+    roundHours,
   ]);
 
-  const statusColor = { loading: "#c8a84b", ok: "#34d37a", err: "#ff6b5b" };
+  // ─── DYNAMIC STYLES ────────────────────────────────────────────────────────
+  const S = {
+    wrap: {
+      background: t.bgMain,
+      minHeight: "100vh",
+      fontFamily: "'DM Mono', 'Courier New', monospace",
+      color: t.textMain,
+      padding: 0,
+      transition: "background 0.3s ease, color 0.3s ease",
+    },
+    header: {
+      background: t.bgCard,
+      borderBottom: `1px solid ${t.border}`,
+      padding: "18px 32px",
+      display: "flex",
+      alignItems: "center",
+      gap: 16,
+    },
+    h1: {
+      fontFamily: "Georgia, serif",
+      fontSize: 22,
+      fontWeight: 700,
+      letterSpacing: "0.02em",
+      margin: 0,
+    },
+    sub: {
+      fontSize: 10,
+      color: t.textMuted,
+      lineHeight: 1.6,
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+    },
+    main: { maxWidth: 900, margin: "0 auto", padding: "28px 20px" },
+    sectionLabel: {
+      fontSize: 10,
+      letterSpacing: "0.2em",
+      textTransform: "uppercase",
+      color: t.textMuted,
+      marginBottom: 10,
+    },
+    card: {
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      borderRadius: 6,
+      padding: "20px 22px",
+      marginBottom: 18,
+      transition: "background 0.3s ease",
+    },
+    cardTitle: {
+      fontFamily: "Georgia, serif",
+      fontSize: 15,
+      fontWeight: 700,
+      marginBottom: 14,
+      color: t.accent,
+    },
+    label: {
+      display: "block",
+      fontSize: 10,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase",
+      color: t.textMuted,
+      marginBottom: 5,
+    },
+    input: {
+      width: "100%",
+      background: t.bgMain,
+      border: `1px solid ${t.border}`,
+      borderRadius: 4,
+      color: t.textMain,
+      fontFamily: "inherit",
+      fontSize: 14,
+      padding: "9px 11px",
+      outline: "none",
+      boxSizing: "border-box",
+      colorScheme: isLightMode ? "light" : "dark",
+    },
+    slider: {
+      width: "100%",
+      cursor: "pointer",
+      accentColor: t.green,
+      marginTop: 4,
+    },
+    grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
+    grid3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 },
+    grid4: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 },
+    fetchBtn: {
+      width: "100%",
+      padding: "10px 0",
+      background: t.greenFade,
+      border: `1px solid ${t.greenBorder}`,
+      borderRadius: 4,
+      color: t.green,
+      fontFamily: "inherit",
+      fontSize: 11,
+      letterSpacing: "0.12em",
+      textTransform: "uppercase",
+      cursor: "pointer",
+      marginBottom: 14,
+      transition: "all 0.2s",
+    },
+    calcBtn: {
+      width: "100%",
+      padding: 15,
+      background: "#2a7c4f",
+      border: "none",
+      borderRadius: 6,
+      color: "#fff",
+      fontFamily: "Georgia, serif",
+      fontSize: 17,
+      fontWeight: 700,
+      cursor: "pointer",
+      marginBottom: 28,
+      letterSpacing: "0.03em",
+    },
+    statusBase: {
+      fontSize: 11,
+      textAlign: "center",
+      marginBottom: 8,
+      minHeight: 16,
+      letterSpacing: "0.08em",
+    },
+    liveBox: {
+      background: t.bgMain,
+      border: `1px solid ${t.border}`,
+      borderRadius: 4,
+      padding: "10px 14px",
+      fontSize: 11,
+      lineHeight: 1.8,
+      marginBottom: 14,
+      color: t.textMuted,
+    },
+    themeBtn: {
+      marginLeft: "auto",
+      background: t.bgMain,
+      border: `1px solid ${t.border}`,
+      color: t.textMain,
+      borderRadius: 20,
+      padding: "6px 12px",
+      fontSize: 12,
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      transition: "all 0.2s",
+    },
+  };
+
+  const statusColor = { loading: t.accent, ok: t.green, err: t.red };
+
+  function Field({
+    label,
+    value,
+    onChange,
+    type = "number",
+    placeholder,
+    min,
+    max,
+    step = "any",
+  }) {
+    return (
+      <div style={{ marginBottom: 14 }}>
+        <label style={S.label}>{label}</label>
+        <input
+          style={S.input}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          min={min}
+          max={max}
+          step={step}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={S.wrap}>
@@ -803,12 +635,15 @@ export default function App() {
             }}
           />
         </div>
-        <h1 style={S.h1}>Golf Match Odds</h1>
-        <div style={S.sub}>
-          Weather-Adjusted · PCC Simulation
-          <br />
-          Gross Stroke Play · 18 Holes
+        <div>
+          <h1 style={S.h1}>Golf Match Odds</h1>
+          <div style={{ ...S.sub, textAlign: "left" }}>
+            Weather-Adjusted · PCC Simulation
+          </div>
         </div>
+        <button style={S.themeBtn} onClick={() => setIsLightMode(!isLightMode)}>
+          {isLightMode ? "🌙 Dark" : "☀️ Light"}
+        </button>
       </div>
 
       <div style={S.main}>
@@ -919,28 +754,27 @@ export default function App() {
                 fontSize: 10,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                background: "rgba(42,124,79,0.2)",
-                color: "#34d37a",
-                border: "1px solid rgba(52,211,122,0.25)",
+                background: t.greenFade,
+                color: t.green,
+                border: `1px solid ${t.greenBorder}`,
                 padding: "2px 8px",
                 borderRadius: 20,
               }}
             >
-              4-Hour Forecast
+              {roundHours}-Hour Forecast
             </span>
           </div>
           <div
             style={{
               fontSize: 11,
-              color: "#5a7080",
+              color: t.textMuted,
               marginBottom: 14,
               fontStyle: "italic",
             }}
           >
-            Fetches an hourly forecast for the full round window (tee time + 4
-            hrs). Applies a <strong>dynamic weighting system</strong> where
-            hours with more severe weather automatically carry more weight in
-            the final average.
+            Fetches an hourly forecast for your expected round duration. Applies
+            a <strong>dynamic weighting system</strong> where hours with more
+            severe weather automatically carry more weight in the final average.
           </div>
 
           <div style={S.grid3}>
@@ -965,11 +799,56 @@ export default function App() {
             />
           </div>
 
+          <div
+            style={{
+              marginBottom: 18,
+              background: t.bgMain,
+              border: `1px solid ${t.border}`,
+              padding: "12px 16px",
+              borderRadius: 4,
+            }}
+          >
+            <label
+              style={{
+                ...S.label,
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <span>Expected Round Length</span>
+              <span style={{ color: t.textMain, fontWeight: "bold" }}>
+                {roundHours} Hours
+              </span>
+            </label>
+            <input
+              type="range"
+              min="3"
+              max="6"
+              step="1"
+              value={roundHours}
+              onChange={(e) => setRoundHours(parseInt(e.target.value))}
+              style={S.slider}
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 10,
+                color: t.textMuted,
+                marginTop: 4,
+              }}
+            >
+              <span>Speed Golf (3h)</span>
+              <span>Marathon (6h)</span>
+            </div>
+          </div>
+
           {weatherStatus.msg && (
             <div
               style={{
                 ...S.statusBase,
-                color: statusColor[weatherStatus.cls] || "#5a7080",
+                color: statusColor[weatherStatus.cls] || t.textMuted,
               }}
             >
               {weatherStatus.msg}
@@ -978,28 +857,35 @@ export default function App() {
 
           <button style={S.fetchBtn} onClick={fetchWeather} disabled={fetching}>
             {fetching
-              ? "⟳ Searching hourly forecast…"
-              : "⬇ Fetch 4-Hour Round Forecast"}
+              ? `⟳ Searching ${roundHours}-hour forecast…`
+              : `⬇ Fetch ${roundHours}-Hour Round Forecast`}
           </button>
 
           {liveWeather && (
             <div style={{ ...S.liveBox, marginBottom: 10 }}>
-              <span style={{ color: "#1a9e6e" }}>location: </span>
-              <span style={{ color: "#e8edf2" }}>
+              <span style={{ color: t.green }}>location: </span>
+              <span style={{ color: t.textMain }}>
                 {liveWeather.location_found}
               </span>
               {liveWeather.source && (
                 <>
                   <br />
-                  <span style={{ color: "#1a9e6e" }}>source: </span>
-                  <span style={{ color: "#e8edf2" }}>{liveWeather.source}</span>
+                  <span style={{ color: t.green }}>source: </span>
+                  <span style={{ color: t.textMain }}>
+                    {liveWeather.source}
+                  </span>
                 </>
               )}
             </div>
           )}
 
-          {/* Hourly breakdown table */}
-          <HourlyTable hours={hourlyData} teeTime={teeTime} />
+          {/* Hourly breakdown table component call */}
+          <HourlyTable
+            hours={hourlyData}
+            teeTime={teeTime}
+            t={t}
+            roundHours={roundHours}
+          />
 
           {/* Manual override / weighted result fields */}
           <div
@@ -1007,7 +893,7 @@ export default function App() {
               fontSize: 10,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "#3a5060",
+              color: t.textMuted,
               marginBottom: 8,
             }}
           >
@@ -1017,7 +903,7 @@ export default function App() {
           </div>
           <div style={S.grid4}>
             <Field
-              label="Wind Speed (mph)"
+              label="Wind (mph)"
               value={wind}
               onChange={setWind}
               placeholder="0"
@@ -1035,7 +921,7 @@ export default function App() {
               step="0.1"
             />
             <Field
-              label="Precipitation (mm/hr)"
+              label="Precip (mm/hr)"
               value={precip}
               onChange={setPrecip}
               placeholder="0"
@@ -1059,15 +945,156 @@ export default function App() {
         </button>
 
         {result && (
-          <Results r={result} hourlyData={hourlyData} teeTime={teeTime} />
+          <Results r={result} hourlyData={hourlyData} teeTime={teeTime} t={t} />
         )}
       </div>
     </div>
   );
 }
 
+// ─── HOURLY FORECAST TABLE display ───────────────────────────────────────────
+function HourlyTable({ hours, teeTime, t, roundHours }) {
+  if (!hours || !hours.length) return null;
+
+  const formatTime = (timeStr) => {
+    let [h, m] = timeStr.split(":");
+    let hour = parseInt(h);
+    let ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour}:${m} ${ampm}`;
+  };
+
+  const weights = hours.map((h) => h.weight);
+
+  const HRow = {
+    display: "grid",
+    gridTemplateColumns: "80px 1fr 1fr 1fr 1fr",
+    gap: 0,
+    fontSize: 10,
+    borderBottom: `1px solid ${t.border}`,
+  };
+  const HCell = {
+    padding: "5px 8px",
+    color: t.textMuted,
+    letterSpacing: "0.06em",
+  };
+  const HCellVal = {
+    padding: "5px 8px",
+    color: t.textMain,
+    textAlign: "right",
+    letterSpacing: "0.04em",
+  };
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: t.textMuted,
+          marginBottom: 6,
+        }}
+      >
+        {roundHours}-Hour Round Forecast · Tee {formatTime(teeTime)}
+      </div>
+      <div
+        style={{
+          background: t.bgMain,
+          border: `1px solid ${t.border}`,
+          borderRadius: 4,
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ ...HRow, background: t.bgHeader }}>
+          <div style={HCell}>Hour</div>
+          <div style={{ ...HCell, textAlign: "right" }}>Wind mph</div>
+          <div style={{ ...HCell, textAlign: "right" }}>Gusts mph</div>
+          <div style={{ ...HCell, textAlign: "right" }}>Precip mm</div>
+          <div style={{ ...HCell, textAlign: "right" }}>Temp °F</div>
+        </div>
+        {hours.map((h, i) => (
+          <div
+            key={i}
+            style={{
+              ...HRow,
+              background:
+                i % 2 === 0 ? "transparent" : "rgba(128,128,128,0.03)",
+            }}
+          >
+            <div style={HCell}>
+              {h.label}
+              <span
+                style={{ color: t.textMuted, marginLeft: 4 }}
+              >{`(${h.weight.toFixed(1)}×)`}</span>
+            </div>
+            <div
+              style={{
+                ...HCellVal,
+                color: h.wind > 15 ? t.red : h.wind > 8 ? t.accent : t.green,
+              }}
+            >
+              {h.wind}
+            </div>
+            <div
+              style={{ ...HCellVal, color: h.gusts > 20 ? t.red : t.textMain }}
+            >
+              {h.gusts}
+            </div>
+            <div
+              style={{
+                ...HCellVal,
+                color: h.precip > 0 ? t.accent : t.textMuted,
+              }}
+            >
+              {h.precip.toFixed(1)}
+            </div>
+            <div style={HCellVal}>{h.temp}°</div>
+          </div>
+        ))}
+        <div
+          style={{
+            ...HRow,
+            background: t.greenFade,
+            borderTop: `1px solid ${t.border}`,
+          }}
+        >
+          <div style={{ ...HCell, color: t.green }}>Dyn Avg</div>
+          <div style={{ ...HCellVal, color: t.green }}>
+            {weightedAvg(
+              hours.map((h) => h.wind),
+              weights
+            ).toFixed(1)}
+          </div>
+          <div style={{ ...HCellVal, color: t.green }}>
+            {weightedAvg(
+              hours.map((h) => h.gusts),
+              weights
+            ).toFixed(1)}
+          </div>
+          <div style={{ ...HCellVal, color: t.green }}>
+            {weightedAvg(
+              hours.map((h) => h.precip),
+              weights
+            ).toFixed(2)}
+          </div>
+          <div style={{ ...HCellVal, color: t.green }}>
+            {Math.round(
+              weightedAvg(
+                hours.map((h) => h.temp),
+                weights
+              )
+            )}
+            °
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── RESULTS PANEL ───────────────────────────────────────────────────────────
-function Results({ r, hourlyData, teeTime }) {
+function Results({ r, hourlyData, teeTime, t }) {
   const copy = (text) =>
     navigator.clipboard.writeText(text).then(() => alert("Copied!"));
 
@@ -1085,7 +1112,9 @@ function Results({ r, hourlyData, teeTime }) {
     `⛳ Golf Match Odds (Weather-Adjusted)\n` +
     `${r.n1} (HCP ${r.p1i}) vs ${r.n2} (HCP ${r.p2i})\n` +
     `Course: Rating ${r.rat} / Slope ${r.slp} / Par ${r.pr}\n` +
-    (r.usedHourly ? `Conditions: 4-hr dyn weighted avg — ` : `Conditions: `) +
+    (r.usedHourly
+      ? `Conditions: ${r.roundHours}-hr dyn weighted avg — `
+      : `Conditions: `) +
     `${parseFloat(r.w).toFixed(1)} mph wind, ${parseFloat(r.g).toFixed(
       1
     )} mph gusts, ${parseFloat(r.prc).toFixed(2)} mm precip, ${r.tmp}°F\n` +
@@ -1102,7 +1131,7 @@ function Results({ r, hourlyData, teeTime }) {
       mlToProb(r.baseML) * 100
     ).toFixed(1)}% for ${r.n1}\n\n` +
     (r.usedHourly
-      ? `[4-hour dynamic weighted avg used — worse weather weighted heavier]\n`
+      ? `[${r.roundHours}-hour dynamic weighted avg used — worse weather weighted heavier]\n`
       : "") +
     `WindScore   = 0.134×${parseFloat(r.w).toFixed(1)} + 0.067×${parseFloat(
       r.g
@@ -1120,10 +1149,101 @@ function Results({ r, hourlyData, teeTime }) {
     )}\n` +
     `Adj_Prob(${r.n2}) = ${(r.p2Prob * 100).toFixed(2)}% → ${fmtML(r.p2ML)}`;
 
+  const S = {
+    sectionLabel: {
+      fontSize: 10,
+      letterSpacing: "0.2em",
+      textTransform: "uppercase",
+      color: t.textMuted,
+      marginBottom: 10,
+    },
+    card: {
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      borderRadius: 6,
+      padding: "20px 22px",
+      marginBottom: 18,
+    },
+    heroGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr auto 1fr",
+      gap: 16,
+      alignItems: "center",
+      textAlign: "center",
+    },
+    prName: {
+      fontSize: 10,
+      letterSpacing: "0.18em",
+      textTransform: "uppercase",
+      color: t.textMuted,
+      marginBottom: 6,
+    },
+    prProb: { fontSize: 12, color: t.textMuted, marginTop: 4 },
+    vsText: {
+      fontSize: 12,
+      color: t.textMain,
+      fontWeight: 700,
+      letterSpacing: "0.1em",
+    },
+    edgeBar: {
+      height: 4,
+      background: t.border,
+      borderRadius: 2,
+      overflow: "hidden",
+      marginTop: 14,
+    },
+    brkRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "6px 0",
+      borderBottom: `1px solid ${t.border}`,
+      fontSize: 12,
+    },
+    brkLabel: { color: t.textMuted, fontSize: 11 },
+    brkVal: { fontFamily: "inherit", fontSize: 12 },
+    formula: {
+      background: t.bgMain,
+      border: `1px solid ${t.border}`,
+      borderLeft: `3px solid ${t.green}`,
+      padding: "13px 15px",
+      borderRadius: 4,
+      fontSize: 11,
+      lineHeight: 1.9,
+      color: t.textMuted,
+      whiteSpace: "pre-wrap",
+      fontFamily: "inherit",
+    },
+    disclaimer: {
+      fontSize: 11,
+      color: t.textMuted,
+      lineHeight: 1.7,
+      padding: "14px 16px",
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      borderRadius: 6,
+      fontStyle: "italic",
+    },
+    shareRow: { display: "flex", gap: 10, marginBottom: 18 },
+    shareBtn: {
+      padding: "9px 18px",
+      background: t.bgCard,
+      border: `1px solid ${t.border}`,
+      borderRadius: 4,
+      color: t.textMuted,
+      fontFamily: "inherit",
+      fontSize: 11,
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      cursor: "pointer",
+      transition: "all 0.2s",
+    },
+    grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
+  };
+
   const BrkRow = ({ label, val, color }) => (
     <div style={S.brkRow}>
       <span style={S.brkLabel}>{label}</span>
-      <span style={{ ...S.brkVal, color: color || "#e8edf2" }}>{val}</span>
+      <span style={{ ...S.brkVal, color: color || t.textMain }}>{val}</span>
     </div>
   );
 
@@ -1140,7 +1260,7 @@ function Results({ r, hourlyData, teeTime }) {
                 fontSize: 38,
                 fontWeight: 900,
                 lineHeight: 1,
-                color: r.adjProb >= 0.5 ? "#34d37a" : "#ff6b5b",
+                color: r.adjProb >= 0.5 ? t.green : t.red,
               }}
             >
               {fmtML(r.adjML)}
@@ -1156,7 +1276,7 @@ function Results({ r, hourlyData, teeTime }) {
                 fontSize: 38,
                 fontWeight: 900,
                 lineHeight: 1,
-                color: r.p2Prob >= 0.5 ? "#34d37a" : "#ff6b5b",
+                color: r.p2Prob >= 0.5 ? t.green : t.red,
               }}
             >
               {fmtML(r.p2ML)}
@@ -1169,7 +1289,7 @@ function Results({ r, hourlyData, teeTime }) {
             style={{
               height: "100%",
               width: `${r.adjProb * 100}%`,
-              background: "linear-gradient(to right, #34d37a, #1a9e6e)",
+              background: `linear-gradient(to right, ${t.green}, #1a9e6e)`,
               borderRadius: 2,
               transition: "width 0.8s ease",
             }}
@@ -1180,12 +1300,12 @@ function Results({ r, hourlyData, teeTime }) {
             style={{
               marginTop: 10,
               fontSize: 10,
-              color: "#1a9e6e",
+              color: t.green,
               letterSpacing: "0.08em",
               textAlign: "center",
             }}
           >
-            ↑ Based on 4-hour dynamic forecast from tee time{" "}
+            ↑ Based on {r.roundHours}-hour dynamic forecast from tee time{" "}
             {formatTimeDisplay(teeTime)}
           </div>
         )}
@@ -1207,9 +1327,9 @@ function Results({ r, hourlyData, teeTime }) {
               fontSize: 10,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "#5a7080",
+              color: t.textMuted,
               marginBottom: 12,
-              borderBottom: "1px solid #1e2d3a",
+              borderBottom: `1px solid ${t.border}`,
               paddingBottom: 8,
             }}
           >
@@ -1222,7 +1342,7 @@ function Results({ r, hourlyData, teeTime }) {
           <BrkRow
             label="Stroke Diff"
             val={`${r.ch1 > r.ch2 ? "+" : ""}${r.ch1 - r.ch2} strokes`}
-            color="#c8a84b"
+            color={t.accent}
           />
           <BrkRow
             label="Table Lookup"
@@ -1235,39 +1355,39 @@ function Results({ r, hourlyData, teeTime }) {
               fontSize: 10,
               letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: "#5a7080",
+              color: t.textMuted,
               marginBottom: 12,
-              borderBottom: "1px solid #1e2d3a",
+              borderBottom: `1px solid ${t.border}`,
               paddingBottom: 8,
             }}
           >
-            Simulated PCC {r.usedHourly ? "· 4hr avg" : ""}
+            Simulated PCC {r.usedHourly ? `· ${r.roundHours}hr avg` : ""}
           </div>
           <BrkRow
             label="Wind Factor"
             val={r.windScore.toFixed(3)}
-            color={r.windScore > 0.5 ? "#ff6b5b" : "#34d37a"}
+            color={r.windScore > 0.5 ? t.red : t.green}
           />
           <BrkRow
             label="Precip Factor"
             val={r.precipScore.toFixed(3)}
-            color={r.precipScore > 0.3 ? "#ff6b5b" : "#34d37a"}
+            color={r.precipScore > 0.3 ? t.red : t.green}
           />
           <BrkRow
             label="Temp Factor"
             val={r.tempScore.toFixed(3)}
-            color={r.tempScore > 0.2 ? "#ff6b5b" : "#34d37a"}
+            color={r.tempScore > 0.2 ? t.red : t.green}
           />
           <BrkRow
             label="Simulated PCC"
             val={`${r.pcc >= 0 ? "+" : ""}${r.pcc.toFixed(1)}`}
-            color="#c8a84b"
+            color={t.accent}
           />
           <BrkRow label="Variance Factor" val={r.varianceFactor.toFixed(4)} />
           <BrkRow
             label="Edge Compression"
             val={`−${((1 - 1 / r.varianceFactor) * 100).toFixed(1)}%`}
-            color="#c8a84b"
+            color={t.accent}
           />
         </div>
       </div>
@@ -1280,7 +1400,7 @@ function Results({ r, hourlyData, teeTime }) {
             fontSize: 15,
             fontWeight: 700,
             marginBottom: 12,
-            color: "#c8a84b",
+            color: t.accent,
           }}
         >
           Playing Conditions Meter
@@ -1294,7 +1414,7 @@ function Results({ r, hourlyData, teeTime }) {
           }}
         >
           <span
-            style={{ fontSize: 10, color: "#5a7080", whiteSpace: "nowrap" }}
+            style={{ fontSize: 10, color: t.textMuted, whiteSpace: "nowrap" }}
           >
             −1 Easy
           </span>
@@ -1302,7 +1422,7 @@ function Results({ r, hourlyData, teeTime }) {
             style={{
               flex: 1,
               height: 6,
-              background: "#1e2d3a",
+              background: t.border,
               borderRadius: 3,
               position: "relative",
             }}
@@ -1316,9 +1436,9 @@ function Results({ r, hourlyData, teeTime }) {
                 width: 14,
                 height: 14,
                 borderRadius: "50%",
-                background: "#c8a84b",
-                border: "2px solid #0d1318",
-                boxShadow: "0 0 8px rgba(200,168,75,0.6)",
+                background: t.accent,
+                border: `2px solid ${t.bgCard}`,
+                boxShadow: "0 0 8px rgba(0,0,0,0.2)",
                 transition: "left 0.8s ease",
               }}
             />
@@ -1332,20 +1452,20 @@ function Results({ r, hourlyData, teeTime }) {
                   transform: "translateY(-50%)",
                   width: 1,
                   height: 10,
-                  background: "#1e2d3a",
+                  background: t.bgMain,
                 }}
               />
             ))}
           </div>
           <span
-            style={{ fontSize: 10, color: "#5a7080", whiteSpace: "nowrap" }}
+            style={{ fontSize: 10, color: t.textMuted, whiteSpace: "nowrap" }}
           >
             +3 Hard
           </span>
           <span
             style={{
               fontSize: 14,
-              color: "#c8a84b",
+              color: t.accent,
               width: 32,
               textAlign: "right",
             }}
@@ -1360,11 +1480,11 @@ function Results({ r, hourlyData, teeTime }) {
       <div style={S.disclaimer}>
         <strong>Methodology:</strong> Course Handicap via WHS Rule 6.1. Odds
         from 18-hole gross table (Par 72, Rating 72.0, Slope 113). Weather
-        fetched as a 4-hour hourly forecast spanning the full round window;
+        fetched as an hourly forecast spanning the expected round duration;
         hours dynamically weighted based on weather severity. Simulated PCC
         replicates WHS Rule 5.6 intent. Wind coefficients from peer-reviewed
         research (~1.15 strokes/8.6 mph elite; scaled for amateurs). For
-        entertainment only — not an official GHIN calculation.
+        entertainment only.
       </div>
     </div>
   );
