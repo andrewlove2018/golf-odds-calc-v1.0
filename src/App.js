@@ -73,15 +73,26 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const clampIdx = (v) => clamp(Math.round(v), 0, 15);
 const courseHcp = (idx, slope, rating, par) =>
   Math.round(idx * (slope / 113) + (rating - par));
-const mlToProb = (ml) =>
-  ml === 0 ? 0.5 : ml < 0 ? -ml / (-ml + 100) : 100 / (ml + 100);
-const probToML = (p) =>
-  Math.abs(p - 0.5) < 0.001
-    ? 0
-    : p > 0.5
+const probToML = (p) => {
+  if (p >= 0.99) return -10000;
+  if (p <= 0.01) return 10000;
+  return p > 0.5
     ? -Math.round((p / (1 - p)) * 100)
     : Math.round(((1 - p) / p) * 100);
+};
 const fmtML = (ml) => (ml === 0 ? "EVEN" : ml > 0 ? `+${ml}` : `${ml}`);
+
+const normalCDF = (x, mean, std) => {
+  const z = (x - mean) / std;
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp((-z * z) / 2);
+  const p =
+    d *
+    t *
+    (0.3193815 +
+      t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+};
 
 const THEMES = {
   dark: {
@@ -196,15 +207,13 @@ export default function App() {
       return;
     }
     setFetching(true);
-    setWeatherStatus({ msg: "Verifying exact location...", cls: "loading" });
-
+    setWeatherStatus({ msg: "Verifying location...", cls: "loading" });
     try {
       const parts = loc.split(",");
       const searchCity = parts[0].trim();
       const inputST = parts.length > 1 ? parts[1].trim().toLowerCase() : null;
       const fullST = STATE_CODES[inputST] || inputST;
 
-      // Search with specific country bias
       const geoRes = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
           searchCity
@@ -213,13 +222,11 @@ export default function App() {
       const geoData = await geoRes.json();
       if (!geoData.results) throw new Error("Location not found.");
 
-      // Strict State Filtering
       let match = geoData.results.find(
         (r) =>
           r.country_code === "US" &&
           (inputST ? (r.admin1 || "").toLowerCase().includes(fullST) : true)
       );
-
       if (!match)
         match =
           geoData.results.find((r) => r.country_code === "US") ||
@@ -258,7 +265,6 @@ export default function App() {
           });
         }
       }
-
       const weights = hoursArray.map((h) => h.weight);
       const wAvg = (vals) =>
         vals.reduce((sum, v, i) => sum + v * weights[i], 0) /
@@ -269,7 +275,7 @@ export default function App() {
       setTemp(String(Math.round(wAvg(hoursArray.map((h) => h.temp)))));
       setHourlyData(hoursArray);
       setLiveWeather({ location_found: `${name}, ${admin1}` });
-      setWeatherStatus({ msg: "✓ Accurate forecast loaded", cls: "ok" });
+      setWeatherStatus({ msg: "✓ Forecast loaded", cls: "ok" });
     } catch (e) {
       setWeatherStatus({ msg: `⚠ ${e.message}`, cls: "err" });
     }
@@ -285,18 +291,22 @@ export default function App() {
     const pr = parseInt(par);
     const ch1 = courseHcp(p1i, slp, rat, pr);
     const ch2 = courseHcp(p2i, slp, rat, pr);
-    const baseML = TABLE[clampIdx(ch1)][clampIdx(ch2)];
     const w = parseFloat(wind);
     const g = parseFloat(gusts);
     const prc = parseFloat(precip);
     const tmp = parseFloat(temp);
-
-    const windScore = 0.134 * w + 0.067 * g;
-    const precipScore = Math.min(prc * 1.8, 2.0);
-    const tempScore = Math.max(0, (55 - tmp) / 25) * 0.5;
-    const rawPCC = windScore + precipScore + tempScore - 1.0;
-    const pcc = clamp(Math.round(rawPCC * 2) / 2, -1, 3);
-
+    const pcc = clamp(
+      Math.round(
+        (0.134 * w +
+          0.067 * g +
+          Math.min(prc * 1.8, 2.0) +
+          Math.max(0, (55 - tmp) / 25) * 0.5 -
+          1.0) *
+          2
+      ) / 2,
+      -1,
+      3
+    );
     setResult({
       n1: p1name || "P1",
       n2: p2name || "P2",
@@ -305,13 +315,6 @@ export default function App() {
       ch1,
       ch2,
       pcc,
-      rat,
-      slp,
-      pr,
-      w,
-      g,
-      prc,
-      tmp,
     });
   }, [
     p1hcp,
@@ -350,11 +353,11 @@ export default function App() {
           onClick={() => setIsLightMode(!isLightMode)}
           style={{
             borderRadius: "20px",
-            cursor: "pointer",
             background: t.bgMain,
             color: t.textMain,
             border: `1px solid ${t.border}`,
             padding: "5px 15px",
+            cursor: "pointer",
           }}
         >
           {isLightMode ? "🌙 Dark" : "☀️ Light"}
@@ -443,18 +446,13 @@ export default function App() {
                 marginBottom: "5px",
               }}
             >
-              Course Location
+              Course Location (City, ST)
             </label>
-            <div
-              style={{ fontSize: "9px", color: t.accent, marginBottom: "4px" }}
-            >
-              FORMAT: CITY, ST (e.g. Corvallis, OR)
-            </div>
             <input
               type="text"
               value={loc}
               onChange={(e) => setLoc(e.target.value)}
-              placeholder="City, ST"
+              placeholder="Corvallis, OR"
               style={{
                 width: "100%",
                 background: t.bgMain,
@@ -514,46 +512,19 @@ export default function App() {
               borderRadius: "4px",
             }}
           >
-            {fetching ? "Searching..." : `Fetch Local Forecast`}
+            {fetching ? "Syncing..." : `Fetch Local Forecast`}
           </button>
           {liveWeather && (
             <div
               style={{
-                marginTop: "12px",
-                padding: "8px",
-                background: t.bgMain,
-                borderRadius: "4px",
-                border: `1px solid ${t.border}`,
+                fontSize: "12px",
+                color: t.green,
                 textAlign: "center",
+                marginTop: "5px",
               }}
             >
-              <span
-                style={{
-                  fontSize: "10px",
-                  color: t.textMuted,
-                  textTransform: "uppercase",
-                }}
-              >
-                Synced to:
-              </span>
-              <div
-                style={{ fontSize: "13px", fontWeight: "bold", color: t.green }}
-              >
-                {liveWeather.location_found}
-              </div>
+              Synced: {liveWeather.location_found}
             </div>
-          )}
-          {weatherStatus.msg && (
-            <p
-              style={{
-                fontSize: "11px",
-                textAlign: "center",
-                color: weatherStatus.cls === "ok" ? t.green : t.red,
-                marginTop: "8px",
-              }}
-            >
-              {weatherStatus.msg}
-            </p>
           )}
           <HourlyTable hours={hourlyData} t={t} />
           <div
@@ -586,18 +557,12 @@ export default function App() {
         >
           Calculate Match Odds
         </button>
-        {result && (
-          <>
-            <ResultsPanel r={result} t={t} />
-            <PropBoard r={result} t={t} />
-          </>
-        )}
+        {result && <PropBoard r={result} t={t} />}
       </main>
     </div>
   );
 }
 
-// ─── STABLE SUB-COMPONENTS ────────────────────────────────────────────────────
 function Field({ label, value, onChange, t, type = "number" }) {
   return (
     <div style={{ marginBottom: "10px" }}>
@@ -646,10 +611,10 @@ function HourlyTable({ hours, t }) {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          color: t.textMuted,
           borderBottom: `1px solid ${t.border}`,
           paddingBottom: "5px",
           marginBottom: "5px",
+          color: t.textMuted,
         }}
       >
         <span>Hour</span>
@@ -668,12 +633,7 @@ function HourlyTable({ hours, t }) {
               i === hours.length - 1 ? "none" : `1px solid ${t.border}`,
           }}
         >
-          <span>
-            {h.label}{" "}
-            <small style={{ color: t.textMuted }}>
-              ({h.weight.toFixed(1)}x)
-            </small>
-          </span>
+          <span>{h.label}</span>
           <span>{h.wind}mph</span>
           <span>{h.precip}mm</span>
           <span>{h.temp}°F</span>
@@ -683,117 +643,69 @@ function HourlyTable({ hours, t }) {
   );
 }
 
-const normalCDF = (x, mean, std) => {
-  const z = (x - mean) / std;
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp((-z * z) / 2);
-  const p =
-    d *
-    t *
-    (0.3193815 +
-      t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  return z > 0 ? 1 - p : p;
-};
-
-function ResultsPanel({ r, t }) {
-  const stats1 = {
-    mu: r.ch1 + 3.0 + (r.pcc > 0 ? r.pcc * (1 + r.p1i / 20) : r.pcc),
-    sigma: 2.5 + 0.08 * r.ch1,
-  };
-  const stats2 = {
-    mu: r.ch2 + 3.0 + (r.pcc > 0 ? r.pcc * (1 + r.p2i / 20) : r.pcc),
-    sigma: 2.5 + 0.08 * r.ch2,
-  };
-  const sigmaTotal = Math.sqrt(
-    Math.pow(stats1.sigma, 2) + Math.pow(stats2.sigma, 2)
-  );
-  const prob1 = normalCDF(0, stats1.mu - stats2.mu, sigmaTotal);
-  const ml1 = probToML(prob1);
-  const ml2 = probToML(1 - prob1);
-
-  return (
-    <div
-      style={{
-        marginTop: "30px",
-        background: t.bgCard,
-        padding: "20px",
-        borderRadius: "8px",
-        border: `2px solid ${t.green}`,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "center",
-          textAlign: "center",
-        }}
-      >
-        <div>
-          <p style={{ margin: 0, fontSize: "12px", color: t.textMuted }}>
-            {r.n1}
-          </p>
-          <h1 style={{ margin: 0, color: prob1 > 0.5 ? t.green : t.red }}>
-            {fmtML(ml1)}
-          </h1>
-          <p style={{ fontSize: "11px", margin: 0 }}>
-            {(prob1 * 100).toFixed(1)}%
-          </p>
-        </div>
-        <div style={{ fontWeight: "bold" }}>VS</div>
-        <div>
-          <p style={{ margin: 0, fontSize: "12px", color: t.textMuted }}>
-            {r.n2}
-          </p>
-          <h1 style={{ margin: 0, color: 1 - prob1 > 0.5 ? t.green : t.red }}>
-            {fmtML(ml2)}
-          </h1>
-          <p style={{ fontSize: "11px", margin: 0 }}>
-            {((1 - prob1) * 100).toFixed(1)}%
-          </p>
-        </div>
-      </div>
-      <p
-        style={{
-          marginTop: "15px",
-          fontSize: "12px",
-          color: t.textMuted,
-          textAlign: "center",
-        }}
-      >
-        Weather Adj (PCC):{" "}
-        <strong>
-          {r.pcc >= 0 ? "+" : ""}
-          {r.pcc}
-        </strong>
-      </p>
-    </div>
-  );
-}
-
 function PropBoard({ r, t }) {
-  const stats1 = {
-    mu: r.ch1 + 3.0 + (r.pcc > 0 ? r.pcc * (1 + r.p1i / 20) : r.pcc),
-    sigma: 2.5 + 0.08 * r.ch1,
+  const [wager1, setWager1] = useState("");
+  const [wager2, setWager2] = useState("");
+  const [selectedBet, setSelectedBet] = useState(null);
+
+  const isP1Fav = r.ch1 <= r.ch2;
+  const fav = isP1Fav
+    ? { name: r.n1, ch: r.ch1, i: r.p1i }
+    : { name: r.n2, ch: r.ch2, i: r.p2i };
+  const dog = isP1Fav
+    ? { name: r.n2, ch: r.ch2, i: r.p2i }
+    : { name: r.n1, ch: r.ch1, i: r.p1i };
+
+  const sF = {
+    mu: fav.ch + 3.0 + (r.pcc > 0 ? r.pcc * (1 + fav.i / 20) : r.pcc),
+    sigma: 2.5 + 0.08 * fav.ch,
   };
-  const stats2 = {
-    mu: r.ch2 + 3.0 + (r.pcc > 0 ? r.pcc * (1 + r.p2i / 20) : r.pcc),
-    sigma: 2.5 + 0.08 * r.ch2,
+  const sD = {
+    mu: dog.ch + 3.0 + (r.pcc > 0 ? r.pcc * (1 + dog.i / 20) : r.pcc),
+    sigma: 2.5 + 0.08 * dog.ch,
   };
-  const sigmaTotal = Math.sqrt(
-    Math.pow(stats1.sigma, 2) + Math.pow(stats2.sigma, 2)
-  );
+  const sigT = Math.sqrt(Math.pow(sF.sigma, 2) + Math.pow(sD.sigma, 2));
+
   const chDiff = Math.abs(r.ch1 - r.ch2);
   const props = [];
 
-  for (let s = 0; s <= chDiff + 5; s++) {
-    const probWin1 = normalCDF(0, stats1.mu - (stats2.mu - s), sigmaTotal);
+  const minStrokes = chDiff <= 1 ? -3 : chDiff <= 2 ? -2 : 0;
+  const maxStrokes = chDiff + 5;
+
+  for (let s = minStrokes; s <= maxStrokes; s++) {
+    const muDelta = sF.mu - (sD.mu - s);
+    const probFavWins = normalCDF(0, muDelta, sigT);
     props.push({
       strokes: s,
-      ml: probToML(probWin1),
-      prob: (probWin1 * 100).toFixed(1),
+      label:
+        s < 0
+          ? `${dog.name} giving ${Math.abs(s)} strokes`
+          : `${fav.name} giving ${s} strokes`,
+      giver: s < 0 ? dog.name : fav.name,
+      receiver: s < 0 ? fav.name : dog.name,
+      ml: probToML(probFavWins),
+      prob: (probFavWins * 100).toFixed(1),
     });
   }
+
+  const syncWagers = (val, source) => {
+    if (!selectedBet || val === "") {
+      setWager1("");
+      setWager2("");
+      return;
+    }
+    const num = parseFloat(val);
+    const ml = selectedBet.ml;
+    if (source === "giver") {
+      setWager1(val);
+      const opp = ml > 0 ? num * (ml / 100) : num / (Math.abs(ml) / 100);
+      setWager2(opp.toFixed(2));
+    } else {
+      setWager2(val);
+      const opp = ml > 0 ? num / (ml / 100) : num * (Math.abs(ml) / 100);
+      setWager1(opp.toFixed(2));
+    }
+  };
 
   return (
     <div
@@ -808,74 +720,167 @@ function PropBoard({ r, t }) {
       <h3
         style={{
           fontSize: "10px",
-          textTransform: "uppercase",
           color: t.accent,
           textAlign: "center",
-          marginBottom: "15px",
+          textTransform: "uppercase",
         }}
       >
-        Prop Odds: {r.n1} giving strokes
+        Match Props
       </h3>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          textAlign: "center",
+          gridTemplateColumns: "2.5fr 1fr 1fr 1fr",
+          gap: "5px",
           fontSize: "11px",
+          textAlign: "center",
         }}
       >
-        <div
-          style={{
-            color: t.textMuted,
-            borderBottom: `1px solid ${t.border}`,
-            paddingBottom: "5px",
-          }}
-        >
-          Strokes
-        </div>
-        <div
-          style={{
-            color: t.textMuted,
-            borderBottom: `1px solid ${t.border}`,
-            paddingBottom: "5px",
-          }}
-        >
-          Moneyline
-        </div>
-        <div
-          style={{
-            color: t.textMuted,
-            borderBottom: `1px solid ${t.border}`,
-            paddingBottom: "5px",
-          }}
-        >
-          Win Prob
-        </div>
-        {props.map((p, i) => (
-          <React.Fragment key={i}>
-            <div
-              style={{ padding: "6px", borderBottom: `1px dotted ${t.border}` }}
-            >
-              {p.strokes}
-            </div>
-            <div
-              style={{
-                padding: "6px",
-                borderBottom: `1px dotted ${t.border}`,
-                fontWeight: "bold",
-                color: p.ml <= 0 ? t.green : t.red,
-              }}
-            >
-              {fmtML(p.ml)}
-            </div>
-            <div
-              style={{ padding: "6px", borderBottom: `1px dotted ${t.border}` }}
-            >
-              {p.prob}%
-            </div>
-          </React.Fragment>
-        ))}
+        <div style={{ color: t.textMuted }}>Line</div>
+        <div style={{ color: t.textMuted }}>ML</div>
+        <div style={{ color: t.textMuted }}>Win%</div>
+        <div />
+        {props
+          .sort((a, b) => a.strokes - b.strokes)
+          .map((p, i) => (
+            <React.Fragment key={i}>
+              <div
+                style={{
+                  padding: "8px 0",
+                  borderBottom: `1px dotted ${t.border}`,
+                  color: p.strokes === chDiff ? t.green : t.textMain,
+                }}
+              >
+                {p.label} {p.strokes === chDiff ? "(Fair)" : ""}
+              </div>
+              <div
+                style={{
+                  padding: "8px 0",
+                  borderBottom: `1px dotted ${t.border}`,
+                  color: p.ml <= 0 ? t.green : t.red,
+                }}
+              >
+                {fmtML(p.ml)}
+              </div>
+              <div
+                style={{
+                  padding: "8px 0",
+                  borderBottom: `1px dotted ${t.border}`,
+                }}
+              >
+                {p.prob}%
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedBet(p);
+                  setWager1("");
+                  setWager2("");
+                }}
+                style={{
+                  background:
+                    selectedBet?.strokes === p.strokes &&
+                    selectedBet?.giver === p.giver
+                      ? t.green
+                      : t.bgMain,
+                  color:
+                    selectedBet?.strokes === p.strokes &&
+                    selectedBet?.giver === p.giver
+                      ? "white"
+                      : t.textMain,
+                  border: `1px solid ${t.border}`,
+                  cursor: "pointer",
+                  fontSize: "9px",
+                  borderRadius: "4px",
+                }}
+              >
+                SELECT
+              </button>
+            </React.Fragment>
+          ))}
       </div>
+      {selectedBet && (
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "15px",
+            background: t.bgMain,
+            borderRadius: "8px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ fontSize: "11px", color: t.accent, fontWeight: "bold" }}>
+            BET: {selectedBet.label}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "20px",
+              marginTop: "15px",
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  fontSize: "9px",
+                  color: t.textMuted,
+                  display: "block",
+                }}
+              >
+                {selectedBet.giver} Risks
+              </label>
+              <input
+                type="number"
+                value={wager1}
+                onChange={(e) => syncWagers(e.target.value, "giver")}
+                placeholder="$"
+                style={{
+                  background: t.bgCard,
+                  border: `1px solid ${t.border}`,
+                  color: t.textMain,
+                  padding: "8px",
+                  width: "90px",
+                  textAlign: "center",
+                }}
+              />
+            </div>
+            <div style={{ fontSize: "20px", marginTop: "15px" }}>vs</div>
+            <div>
+              <label
+                style={{
+                  fontSize: "9px",
+                  color: t.textMuted,
+                  display: "block",
+                }}
+              >
+                {selectedBet.receiver} Risks
+              </label>
+              <input
+                type="number"
+                value={wager2}
+                onChange={(e) => syncWagers(e.target.value, "receiver")}
+                placeholder="$"
+                style={{
+                  background: t.bgCard,
+                  border: `1px solid ${t.border}`,
+                  color: t.textMain,
+                  padding: "8px",
+                  width: "90px",
+                  textAlign: "center",
+                }}
+              />
+            </div>
+          </div>
+          <p
+            style={{ fontSize: "10px", color: t.textMuted, marginTop: "15px" }}
+          >
+            Winner takes the pot:{" "}
+            <strong style={{ color: t.green }}>
+              ${(parseFloat(wager1 || 0) + parseFloat(wager2 || 0)).toFixed(2)}
+            </strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
