@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 
-// ─── ODDS TABLE (18 holes · Par 72 · Rating 72.0 · Slope 113) ────────────────
+// ─── ODDS TABLE ──────────────────────────────────────────────────────────────
 const TABLE = [
   [0,-138,-190,-262,-363,-507,-715,-1020,-1477,-2169,-3238,-4915,-7589,-11921,-19048,-30952],
   [138,0,-137,-188,-258,-356,-495,-694,-985,-1415,-2064,-3058,-4602,-7043,-10961,-17343],
@@ -23,22 +23,15 @@ const TABLE = [
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const clampIdx = v => clamp(Math.round(v), 0, 15);
-const courseHcp = (idx, slope, rating, par) =>
-  Math.round(idx * (slope / 113) + (rating - par));
-const mlToProb = ml => {
-  if (ml === 0) return 0.5;
-  return ml < 0 ? (-ml) / (-ml + 100) : 100 / (ml + 100);
-};
-const probToML = p => {
-  if (Math.abs(p - 0.5) < 0.001) return 0;
-  return p > 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100);
-};
-const fmtML = ml => ml === 0 ? "EVEN" : ml > 0 ? `+${ml}` : `${ml}`;
+const courseHcp = (idx, slope, rating, par) => Math.round(idx * (slope / 113) + (rating - par));
+const mlToProb = ml => (ml === 0 ? 0.5 : ml < 0 ? (-ml) / (-ml + 100) : 100 / (ml + 100));
+const probToML = p => (Math.abs(p - 0.5) < 0.001 ? 0 : p > 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100));
+const fmtML = ml => (ml === 0 ? "EVEN" : ml > 0 ? `+${ml}` : `${ml}`);
 
 const calcHourWeight = (w, g, prc, tmp) => {
-  const windScore   = 0.134 * w + 0.067 * g;
+  const windScore = 0.134 * w + 0.067 * g;
   const precipScore = Math.min(prc * 1.8, 2.0);
-  const tempScore   = Math.max(0, (55 - tmp) / 25) * 0.5;
+  const tempScore = Math.max(0, (55 - tmp) / 25) * 0.5;
   return 1.0 + windScore + precipScore + tempScore;
 };
 
@@ -48,87 +41,82 @@ const weightedAvg = (vals, weights) => {
   return vals.reduce((sum, v, i) => sum + v * weights[i], 0) / total;
 };
 
-// ─── THEMES ──────────────────────────────────────────────────────────────────
 const THEMES = {
-  dark: {
-    bgMain: "#080c10", bgCard: "#0d1318", bgHeader: "#0a1018",
-    border: "#1e2d3a", textMain: "#e8edf2", textMuted: "#5a7080",
-    accent: "#c8a84b", green: "#34d37a", red: "#ff6b5b",
-    greenFade: "rgba(42,124,79,0.15)", greenBorder: "rgba(52,211,122,0.3)"
-  },
-  light: {
-    bgMain: "#f1f5f9", bgCard: "#ffffff", bgHeader: "#f8fafc",
-    border: "#cbd5e1", textMain: "#0f172a", textMuted: "#64748b",
-    accent: "#b45309", green: "#16a34a", red: "#dc2626",
-    greenFade: "rgba(22,163,74,0.1)", greenBorder: "rgba(22,163,74,0.3)"
-  }
+  dark: { bgMain: "#080c10", bgCard: "#0d1318", border: "#1e2d3a", textMain: "#e8edf2", textMuted: "#5a7080", accent: "#c8a84b", green: "#34d37a", red: "#ff6b5b", greenFade: "rgba(42,124,79,0.15)", greenBorder: "rgba(52,211,122,0.3)" },
+  light: { bgMain: "#f1f5f9", bgCard: "#ffffff", border: "#cbd5e1", textMain: "#0f172a", textMuted: "#64748b", accent: "#b45309", green: "#16a34a", red: "#dc2626", greenFade: "rgba(22,163,74,0.1)", greenBorder: "rgba(22,163,74,0.3)" }
+};
+
+const STATE_MAP = {
+  "or": "oregon", "wa": "washington", "ca": "california", "id": "idaho", "nv": "nevada", "az": "arizona", "ut": "utah", "mt": "montana", "wy": "wyoming", "co": "colorado", "nm": "new mexico", "nd": "north dakota", "sd": "south dakota", "ne": "nebraska", "ks": "kansas", "ok": "oklahoma", "tx": "texas", "mn": "minnesota", "ia": "iowa", "mo": "missouri", "ar": "arkansas", "la": "louisiana", "wi": "wisconsin", "il": "illinois", "ms": "mississippi", "mi": "michigan", "in": "indiana", "ky": "kentucky", "tn": "tennessee", "al": "alabama", "oh": "ohio", "ga": "georgia", "fl": "florida", "ny": "new york", "pa": "pennsylvania", "nc": "north carolina", "sc": "south carolina", "va": "virginia", "wv": "west virginia", "md": "maryland", "de": "delaware", "nj": "new jersey", "ct": "connecticut", "ri": "rhode island", "ma": "massachusetts", "nh": "new hampshire", "vt": "vermont", "me": "maine", "hi": "hawaii", "ak": "alaska"
 };
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const today = new Date().toISOString().split('T')[0];
-
   const [isLightMode, setIsLightMode] = useState(false);
   const t = isLightMode ? THEMES.light : THEMES.dark;
 
   const [p1name, setP1name] = useState("");
   const [p2name, setP2name] = useState("");
-  const [p1hcp,  setP1hcp]  = useState("");
-  const [p2hcp,  setP2hcp]  = useState("");
+  const [p1hcp, setP1hcp] = useState("");
+  const [p2hcp, setP2hcp] = useState("");
   const [rating, setRating] = useState("72.0");
-  const [slope,  setSlope]  = useState("113");
-  const [par,    setPar]    = useState("72");
-  const [loc,    setLoc]    = useState("");
-  
-  const [roundDate,  setRoundDate]  = useState(today);
-  const [teeTime,    setTeeTime]    = useState("08:00"); 
+  const [slope, setSlope] = useState("113");
+  const [par, setPar] = useState("72");
+  const [loc, setLoc] = useState("");
+  const [roundDate, setRoundDate] = useState(today);
+  const [teeTime, setTeeTime] = useState("08:00");
   const [roundHours, setRoundHours] = useState(4);
-  
-  const [wind,   setWind]   = useState("");
-  const [gusts,  setGusts]  = useState("");
+  const [wind, setWind] = useState("");
+  const [gusts, setGusts] = useState("");
   const [precip, setPrecip] = useState("");
-  const [temp,   setTemp]   = useState("70");
+  const [temp, setTemp] = useState("70");
   const [hourlyData, setHourlyData] = useState(null);
   const [weatherStatus, setWeatherStatus] = useState({ msg: "", cls: "" });
-  const [liveWeather, setLiveWeather]     = useState(null);
-  const [fetching, setFetching]           = useState(false);
-  const [result, setResult]               = useState(null);
+  const [liveWeather, setLiveWeather] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const [result, setResult] = useState(null);
 
   const fetchWeather = useCallback(async () => {
     if (!loc.trim()) { setWeatherStatus({ msg: "Enter a location first", cls: "err" }); return; }
-    if (!roundDate || !teeTime) { setWeatherStatus({ msg: "Enter a valid date and tee time", cls: "err" }); return; }
-    
-    setFetching(true);
-    setHourlyData(null);
-    setLiveWeather(null);
-    setWeatherStatus({ msg: "Finding location...", cls: "loading" });
+    setFetching(true); setWeatherStatus({ msg: "Verifying location...", cls: "loading" });
 
     try {
+      // Step 1: Sanitize Input (Extract City and State)
       const parts = loc.split(',');
       const searchCity = parts[0].trim();
+      const inputST = parts.length > 1 ? parts[1].trim().toLowerCase() : null;
+      const fullStateName = STATE_MAP[inputST] || inputST;
 
-      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchCity)}&count=10&language=en&format=json`);
-      if (!geoRes.ok) throw new Error("Geocoding failed");
+      // Step 2: Search for City
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchCity)}&count=20&language=en&format=json`);
       const geoData = await geoRes.json();
-      if (!geoData.results || geoData.results.length === 0) throw new Error("Location not found.");
       
-      let match = geoData.results[0];
-      if (parts.length > 1) {
-        const searchRegion = parts[1].trim().toLowerCase();
-        const states = { "al": "alabama", "ak": "alaska", "az": "arizona", "ar": "arkansas", "ca": "california", "co": "colorado", "ct": "connecticut", "de": "delaware", "fl": "florida", "ga": "georgia", "hi": "hawaii", "id": "idaho", "il": "illinois", "in": "indiana", "ia": "iowa", "ks": "kansas", "ky": "kentucky", "la": "louisiana", "me": "maine", "md": "maryland", "ma": "massachusetts", "mi": "michigan", "mn": "minnesota", "ms": "mississippi", "mo": "missouri", "mt": "montana", "ne": "nebraska", "nv": "nevada", "nh": "new hampshire", "nj": "new jersey", "nm": "new mexico", "ny": "new york", "nc": "north carolina", "nd": "north dakota", "oh": "ohio", "ok": "oklahoma", "or": "oregon", "pa": "pennsylvania", "ri": "rhode island", "sc": "south carolina", "sd": "south dakota", "tn": "tennessee", "tx": "texas", "ut": "utah", "vt": "vermont", "va": "virginia", "wa": "washington", "wv": "west virginia", "wi": "wisconsin", "wy": "wyoming" };
-        const expandedRegion = states[searchRegion] || searchRegion;
-        const found = geoData.results.find(r => (r.admin1 || "").toLowerCase().includes(expandedRegion));
-        if (found) match = found;
+      if (!geoData.results || geoData.results.length === 0) {
+        throw new Error("City not found.");
       }
       
-      const { latitude, longitude, name, admin1, country_code } = match;
-      setWeatherStatus({ msg: "Fetching forecast...", cls: "loading" });
+      // Step 3: Strict State Matching
+      let match = null;
+      if (inputST) {
+        match = geoData.results.find(r => 
+          r.country_code === 'US' && 
+          ((r.admin1 || "").toLowerCase().includes(fullStateName) || (r.admin1_id && r.admin1_id.toString().includes(inputST)))
+        );
+      } else {
+        match = geoData.results.find(r => r.country_code === 'US') || geoData.results[0];
+      }
 
+      if (!match) throw new Error(`Could not find ${searchCity} in ${inputST.toUpperCase()}.`);
+
+      const { latitude, longitude, name, admin1 } = match;
+
+      // Step 4: Fetch Weather
       const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=mm&timezone=auto&start_date=${roundDate}&end_date=${roundDate}`);
       const weatherData = await weatherRes.json();
+      
       const startHour = parseInt(teeTime.split(':')[0], 10);
       const hoursArray = [];
-      
       for (let i = 0; i < roundHours; i++) {
         const hourIdx = startHour + i;
         if (hourIdx < 24) {
@@ -146,105 +134,110 @@ export default function App() {
       setPrecip(weightedAvg(hoursArray.map(h => h.precip), weights).toFixed(2));
       setTemp(String(Math.round(weightedAvg(hoursArray.map(h => h.temp), weights))));
       setHourlyData(hoursArray);
-      setLiveWeather({ location_found: `${name}, ${admin1}`, source: "Open-Meteo API" });
-      setWeatherStatus({ msg: `✓ ${roundHours}-hour forecast loaded`, cls: "ok" });
-    } catch (e) {
-      setWeatherStatus({ msg: `⚠ ${e.message}`, cls: "err" });
-    }
+      setLiveWeather({ location_found: `${name}, ${admin1}` });
+      setWeatherStatus({ msg: "✓ Success", cls: "ok" });
+    } catch (e) { setWeatherStatus({ msg: `⚠ ${e.message}`, cls: "err" }); }
     setFetching(false);
   }, [loc, teeTime, roundDate, roundHours]);
 
   const calculate = useCallback(() => {
     const p1i = parseFloat(p1hcp); const p2i = parseFloat(p2hcp);
-    if (isNaN(p1i) || isNaN(p2i)) { alert("Enter both indexes."); return; }
+    if (isNaN(p1i) || isNaN(p2i)) return;
     const rat = parseFloat(rating); const slp = parseFloat(slope); const pr = parseInt(par);
-    const w = parseFloat(wind); const g = parseFloat(gusts); const prc = parseFloat(precip); const tmp = parseFloat(temp);
-    const n1 = p1name || "Player 1"; const n2 = p2name || "Player 2";
     const ch1 = courseHcp(p1i, slp, rat, pr); const ch2 = courseHcp(p2i, slp, rat, pr);
-    const row = clampIdx(ch1); const col = clampIdx(ch2);
-    const baseML = TABLE[row][col];
-    const windScore = 0.134 * w + 0.067 * g; const precipScore = Math.min(prc * 1.8, 2.0);
+    const baseML = TABLE[clampIdx(ch1)][clampIdx(ch2)];
+    const w = parseFloat(wind); const g = parseFloat(gusts); const prc = parseFloat(precip); const tmp = parseFloat(temp);
+    
+    const windScore = 0.134 * w + 0.067 * g;
+    const precipScore = Math.min(prc * 1.8, 2.0);
     const tempScore = Math.max(0, (55 - tmp) / 25) * 0.5;
     const rawPCC = windScore + precipScore + tempScore - 1.0;
     const pcc = clamp(Math.round(rawPCC * 2) / 2, -1, 3);
     const varianceFactor = 1 + (Math.max(0, pcc) * 0.07);
     const adjProb = 0.5 + (mlToProb(baseML) - 0.5) / varianceFactor;
-    setResult({ n1, n2, p1i, p2i, ch1, ch2, row, col, baseML, adjML: probToML(adjProb), p2ML: probToML(1 - adjProb), adjProb, p2Prob: 1 - adjProb, pcc, rawPCC, windScore, precipScore, tempScore, varianceFactor, rat, slp, pr, w, g, prc, tmp, usedHourly: !!hourlyData, roundHours });
-  }, [p1hcp, p2hcp, rating, slope, par, wind, gusts, precip, temp, p1name, p2name, hourlyData, roundHours]);
-
-  const S = {
-    wrap: { background: t.bgMain, minHeight: "100vh", fontFamily: "'DM Mono', monospace", color: t.textMain, padding: 0 },
-    header: { background: t.bgCard, borderBottom: `1px solid ${t.border}`, padding: "18px 32px", display: "flex", alignItems: "center" },
-    h1: { fontFamily: "Georgia, serif", fontSize: 22, margin: 0 },
-    themeBtn: { marginLeft: "auto", background: t.bgMain, border: `1px solid ${t.border}`, color: t.textMain, borderRadius: 20, padding: "6px 12px", cursor: "pointer" },
-    main: { maxWidth: 900, margin: "0 auto", padding: "28px 20px" },
-    card: { background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6, padding: "20px 22px", marginBottom: 18 },
-    label: { display: "block", fontSize: 10, textTransform: "uppercase", color: t.textMuted, marginBottom: 5 },
-    input: { width: "100%", background: t.bgMain, border: `1px solid ${t.border}`, borderRadius: 4, color: t.textMain, padding: "9px 11px", boxSizing: "border-box" },
-    fetchBtn: { width: "100%", padding: "10px 0", background: t.greenFade, border: `1px solid ${t.greenBorder}`, color: t.green, cursor: "pointer", marginBottom: 14 },
-    calcBtn: { width: "100%", padding: 15, background: "#2a7c4f", color: "#fff", cursor: "pointer", marginBottom: 28, border: "none", borderRadius: 6, fontWeight: 700 }
-  };
+    
+    setResult({ n1: p1name || "P1", n2: p2name || "P2", p1i, p2i, ch1, ch2, adjML: probToML(adjProb), p2ML: probToML(1 - adjProb), adjProb, p2Prob: 1 - adjProb, pcc, windScore, precipScore, tempScore });
+  }, [p1hcp, p2hcp, rating, slope, par, wind, gusts, precip, temp, p1name, p2name]);
 
   return (
-    <div style={S.wrap}>
-      <div style={S.header}>
-        <h1 style={S.h1}>Golf Match Odds</h1>
-        <button style={S.themeBtn} onClick={() => setIsLightMode(!isLightMode)}>{isLightMode ? "🌙 Dark" : "☀️ Light"}</button>
-      </div>
-      <div style={S.main}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={S.card}>
-            <Field label="P1 Name" value={p1name} onChange={setP1name} type="text" t={t} />
-            <Field label="P1 Index" value={p1hcp} onChange={setP1hcp} t={t} />
-          </div>
-          <div style={S.card}>
-            <Field label="P2 Name" value={p2name} onChange={setP2name} type="text" t={t} />
-            <Field label="P2 Index" value={p2hcp} onChange={setP2hcp} t={t} />
-          </div>
+    <div style={{ background: t.bgMain, color: t.textMain, minHeight: "100vh", fontFamily: "monospace" }}>
+      <header style={{ background: t.bgCard, padding: "10px 20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between" }}>
+        <h2 style={{ margin: 0 }}>Golf Odds Calculator</h2>
+        <button onClick={() => setIsLightMode(!isLightMode)} style={{ borderRadius: "20px", cursor: "pointer", background: t.bgMain, color: t.textMain, border: `1px solid ${t.border}`, padding: "5px 15px" }}>
+          {isLightMode ? "🌙 Dark" : "☀️ Light"}
+        </button>
+      </header>
+      <main style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <section style={{ background: t.bgCard, padding: "15px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
+            <Field label="Player 1 Name" value={p1name} onChange={setP1name} type="text" t={t} />
+            <Field label="Player 1 Index" value={p1hcp} onChange={setP1hcp} t={t} />
+          </section>
+          <section style={{ background: t.bgCard, padding: "15px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
+            <Field label="Player 2 Name" value={p2name} onChange={setP2name} type="text" t={t} />
+            <Field label="Player 2 Index" value={p2hcp} onChange={setP2hcp} t={t} />
+          </section>
         </div>
-        <div style={S.card}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
+        <section style={{ background: t.bgCard, padding: "15px", borderRadius: "8px", border: `1px solid ${t.border}`, marginTop: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
             <Field label="Rating" value={rating} onChange={setRating} t={t} />
             <Field label="Slope" value={slope} onChange={setSlope} t={t} />
             <Field label="Par" value={par} onChange={setPar} t={t} />
           </div>
-        </div>
-        <div style={S.card}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
-            <Field label="Location" value={loc} onChange={setLoc} type="text" t={t} />
+        </section>
+        <section style={{ background: t.bgCard, padding: "15px", borderRadius: "8px", border: `1px solid ${t.border}`, marginTop: "20px" }}>
+          
+          <div style={{ marginBottom: "10px" }}>
+            <label style={{ display: "block", fontSize: "10px", color: t.textMuted, textTransform: "uppercase", marginBottom: "5px" }}>Course Location</label>
+            <div style={{ fontSize: "9px", color: t.accent, marginBottom: "4px" }}>City, ST (e.g. Corvallis, OR)</div>
+            <input type="text" value={loc} onChange={(e) => setLoc(e.target.value)} placeholder="City, ST"
+              style={{ width: "100%", background: t.bgMain, border: `1px solid ${t.border}`, color: t.textMain, padding: "8px", boxSizing: "border-box", borderRadius: "4px" }} 
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
             <Field label="Tee Time" value={teeTime} onChange={setTeeTime} type="time" t={t} />
             <Field label="Date" value={roundDate} onChange={setRoundDate} type="date" t={t} />
           </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={S.label}>Round Length: {roundHours}h</label>
-            <input type="range" min="3" max="6" value={roundHours} onChange={e => setRoundHours(parseInt(e.target.value))} style={{ width: "100%" }} />
+          <div style={{ marginTop: "10px" }}>
+            <label style={{ fontSize: "12px", color: t.textMuted }}>Round Length: {roundHours}h</label>
+            <input type="range" min="3" max="6" value={roundHours} onChange={(e) => setRoundHours(parseInt(e.target.value))} style={{ width: "100%", accentColor: t.green }} />
           </div>
-          {weatherStatus.msg && <div style={{ fontSize: 11, textAlign: "center", color: statusColor[weatherStatus.cls] }}>{weatherStatus.msg}</div>}
-          <button style={S.fetchBtn} onClick={fetchWeather}>Fetch {roundHours}h Forecast</button>
+          <button onClick={fetchWeather} style={{ width: "100%", padding: "10px", marginTop: "10px", background: t.greenFade, color: t.green, border: `1px solid ${t.greenBorder}`, cursor: "pointer", borderRadius: "4px" }}>
+            {fetching ? "Syncing..." : `Fetch Local Forecast`}
+          </button>
+          
+          {liveWeather && (
+            <div style={{ marginTop: "12px", padding: "8px", background: t.bgMain, borderRadius: "4px", border: `1px solid ${t.border}`, textAlign: "center" }}>
+              <span style={{ fontSize: "10px", color: t.textMuted, textTransform: "uppercase" }}>Synced to:</span>
+              <div style={{ fontSize: "13px", fontWeight: "bold", color: t.green }}>{liveWeather.location_found}</div>
+            </div>
+          )}
+
+          {weatherStatus.msg && <p style={{ fontSize: "11px", textAlign: "center", color: (weatherStatus.cls === 'ok' ? t.green : t.red), marginTop: "8px" }}>{weatherStatus.msg}</p>}
           <HourlyTable hours={hourlyData} t={t} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px", marginTop: "10px" }}>
             <Field label="Wind" value={wind} onChange={setWind} t={t} />
             <Field label="Gusts" value={gusts} onChange={setGusts} t={t} />
             <Field label="Precip" value={precip} onChange={setPrecip} t={t} />
             <Field label="Temp" value={temp} onChange={setTemp} t={t} />
           </div>
-        </div>
-        <button style={S.calcBtn} onClick={calculate}>Calculate Odds</button>
+        </section>
+        <button onClick={calculate} style={{ width: "100%", padding: "15px", background: t.green, color: "white", border: "none", borderRadius: "8px", marginTop: "20px", fontWeight: "bold", cursor: "pointer" }}>
+          Calculate Match Odds
+        </button>
         {result && <Results r={result} t={t} />}
-      </div>
+      </main>
     </div>
   );
 }
 
-// ─── STABLE COMPONENTS (OUTSIDE APP) ─────────────────────────────────────────
+// ─── STABLE SUB-COMPONENTS ────────────────────────────────────────────────────
 function Field({ label, value, onChange, t, type = "number" }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", fontSize: 10, textTransform: "uppercase", color: t.textMuted, marginBottom: 5 }}>{label}</label>
-      <input 
-        style={{ width: "100%", background: t.bgMain, border: `1px solid ${t.border}`, borderRadius: 4, color: t.textMain, padding: "9px 11px", boxSizing: "border-box" }} 
-        type={type} value={value} onChange={e => onChange(e.target.value)} 
-      />
+    <div style={{ marginBottom: "10px" }}>
+      <label style={{ display: "block", fontSize: "10px", color: t.textMuted, textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} style={{ width: "100%", background: t.bgMain, border: `1px solid ${t.border}`, color: t.textMain, padding: "8px", boxSizing: "border-box", borderRadius: "4px" }} />
     </div>
   );
 }
@@ -252,11 +245,14 @@ function Field({ label, value, onChange, t, type = "number" }) {
 function HourlyTable({ hours, t }) {
   if (!hours) return null;
   return (
-    <div style={{ background: t.bgMain, borderRadius: 4, padding: 10, fontSize: 10, marginBottom: 14 }}>
+    <div style={{ marginTop: "15px", background: t.bgMain, borderRadius: "4px", padding: "10px", fontSize: "11px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", color: t.textMuted, borderBottom: `1px solid ${t.border}`, paddingBottom: "5px", marginBottom: "5px" }}>
+        <span>Hour</span><span>Wind</span><span>Precip</span><span>Temp</span>
+      </div>
       {hours.map((h, i) => (
-        <div key={i} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${t.border}`, padding: "4px 0" }}>
-          <span>{h.label} ({h.weight.toFixed(1)}x)</span>
-          <span>{h.wind}mph | {h.precip}mm | {h.temp}°</span>
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: i === hours.length - 1 ? "none" : `1px solid ${t.border}` }}>
+          <span>{h.label} <small style={{ color: t.textMuted }}>({h.weight.toFixed(1)}x)</small></span>
+          <span>{h.wind}mph</span><span>{h.precip}mm</span><span>{h.temp}°F</span>
         </div>
       ))}
     </div>
@@ -264,14 +260,17 @@ function HourlyTable({ hours, t }) {
 }
 
 function Results({ r, t }) {
+  const fmtML = ml => (ml === 0 ? "EVEN" : ml > 0 ? `+${ml}` : `${ml}`);
   return (
-    <div style={{ background: t.bgCard, border: `1px solid ${t.border}`, borderRadius: 6, padding: 20 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", textAlign: "center", alignItems: "center" }}>
-        <div><div style={{ fontSize: 10, color: t.textMuted }}>{r.n1}</div><div style={{ fontSize: 32, fontWeight: 900 }}>{fmtML(r.adjML)}</div></div>
-        <div style={{ fontSize: 12, fontWeight: 700 }}>VS</div>
-        <div><div style={{ fontSize: 10, color: t.textMuted }}>{r.n2}</div><div style={{ fontSize: 32, fontWeight: 900 }}>{fmtML(r.p2ML)}</div></div>
+    <div style={{ marginTop: "30px", background: t.bgCard, padding: "20px", borderRadius: "8px", border: `2px solid ${t.green}` }}>
+      <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", textAlign: "center" }}>
+        <div><p style={{ margin: 0, fontSize: "12px", color: t.textMuted }}>{r.n1}</p><h1 style={{ margin: 0, color: r.adjProb > 0.5 ? t.green : t.red }}>{fmtML(r.adjML)}</h1></div>
+        <div style={{ fontWeight: "bold" }}>VS</div>
+        <div><p style={{ margin: 0, fontSize: "12px", color: t.textMuted }}>{r.n2}</p><h1 style={{ margin: 0, color: r.p2Prob > 0.5 ? t.green : t.red }}>{fmtML(r.p2ML)}</h1></div>
       </div>
-      <div style={{ marginTop: 14, fontSize: 11, color: t.textMuted }}>Simulated PCC: {r.pcc >= 0 ? "+" : ""}{r.pcc}</div>
+      <div style={{ marginTop: "20px", borderTop: `1px solid ${t.border}`, paddingTop: "15px" }}>
+        <p style={{ fontSize: "12px", color: t.textMuted, textAlign: "center" }}>Simulated PCC: <strong>{r.pcc >= 0 ? "+" : ""}{r.pcc}</strong></p>
+      </div>
     </div>
   );
 }
